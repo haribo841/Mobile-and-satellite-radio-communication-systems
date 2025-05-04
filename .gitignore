@@ -573,3 +573,5 @@ FodyWeavers.xsd
 *.sln.iml
 
 *.vsidx
+*..sln
+*.pyproj

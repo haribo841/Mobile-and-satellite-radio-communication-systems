@@ -2,117 +2,111 @@
 import matplotlib.pyplot as plt
 import math
 
-# Parametry systemu
-D = 1000                      # odległość między stacją mikro (0) a makro (1000 m)
-n_users = 20                  # liczba użytkowników
-f = 3.5e9                     # częstotliwość [Hz]
-# Stałe: logarytm dziesiętny, FSPL wyrażone w dB
+# — parametry stacji i anten
+G_tx_macro = 18    # dBi
+P_tx_macro = 46    # dBm
+H_macro    = 40    # m
+
+G_tx_micro = 12    # dBi
+P_tx_micro = 30    # dBm
+h_micro    = 5     # m
+
+G_ue = 2           # dBi
+u    = 2           # m
+
+# — parametry kanału
+D       = 1000          # m, odległość mikro(0)–makro(D)
+n_users = 20
+
+# — częstotliwość i pasmo
+f  = 3.5e9      # Hz, 3.5 GHz
+B  = 5e6        # Hz, 5 MHz
+Nt = -174       # dBm/Hz (gęstość mocy szumu termicznego)
+
 def fspl(d):
-    # FSPL [dB] = 20*log10(d) + 20*log10(f) - 147.55, gdzie d w metrach
-    return 20 * np.log10(d) + 20 * np.log10(f) - 147.55
+    """Free‐Space Path Loss [dB]"""
+    return 20*np.log10(d) + 20*np.log10(f) - 147.55
 
-# Parametry stacji i anten (w dBm i dBi)
-P_tx_micro = 30             # moc nadawcza mikro [dBm]
-G_tx_micro = 12             # zysk anteny stacji mikro [dBi]
-P_tx_macro = 46             # moc nadawcza makro [dBm]
-G_tx_macro = 18             # zysk anteny stacji makro [dBi]
-G_ue = 2                    # zysk anteny użytkownika [dBi]
+def bandwidth_per_user(n_micro, n_macro):
+    """Pasmo przydzielane równomiernie:
+       - mikro dzieli B/4 między n_micro użytk.
+       - makro dzieli B/10 między n_macro użytk."""
+    B_s = (B/4) / n_micro if n_micro>0 else 0
+    B_m = (B/10)/ n_macro if n_macro>0 else 0
+    return B_m, B_s
 
-# Wysokości
-h_micro = 5                 # wysokość stacji mikro [m]
-H_macro = 40                # wysokość stacji makro [m]
-u = 2                       # wysokość użytkownika [m]
+def dbm_to_mw(p_dbm):
+    return 10**(p_dbm/10)
 
-# Pasma przydzielane użytkownikom (w Hz)
-B_total = 5e6               # całkowite pasmo [Hz]
-B_user_micro = B_total / 4  # 1.25 MHz dla stacji mikro
-B_user_macro = B_total / 10 # 0.5 MHz dla stacji makro
+def noise_dbm(bw_hz):
+    """Szum termiczny w dBm = Nt (dBm/Hz) + 10log10(B)"""
+    return Nt + 10*np.log10(bw_hz)
 
-# Generujemy losowo położenie użytkowników (jeden wymiar: x między 0 a D)
-np.random.seed(42) # dla powtarzalności wyników
-user_positions = np.random.uniform(0, D, n_users)
+# pozycje użytkowników
+np.random.seed(42)
+user_pos = np.random.uniform(0, D, size=n_users)
 
-def calc_received_power(x, bs_position, bs_height, P_tx, G_tx):
-    # Obliczamy odległość euklidesową między użytkownikiem a stacją
-    # dla mikro: bs_position = 0, bs_height = h_micro; dla makro: bs_position = D, bs_height = H_macro.
-    horizontal_dist = abs(x - bs_position)
-    vertical_diff = abs(bs_height - u)
-    d = np.sqrt(horizontal_dist**2 + vertical_diff**2)
-    path_loss = fspl(d)
-    # Suma mocy + zyski minus stratę propagacji
-    P_rx = P_tx + G_tx + G_ue - path_loss
-    return P_rx, d
+def rx_powers(d):
+    """Zwraca Pm, Ps [dBm] – moce odebrane od makro i mikro"""
+    # odległości 3D
+    dm = np.hypot(D-d, H_macro-u)
+    ds = np.hypot(d,   h_micro-u)
+    # moce odebrane
+    Pm = P_tx_macro + G_tx_macro + G_ue - fspl(dm)
+    Ps = P_tx_micro + G_tx_micro + G_ue - fspl(ds)
+    return Pm, Ps
 
-# Funkcja licząca przepływność użytkownika
-def calc_throughput(P_rx_serving_dBm, P_rx_interferer_dBm, bandwidth):
-    # Konwersja mocy z dBm na mW:
-    S_mW = 10**(P_rx_serving_dBm/10)
-    I_mW = 10**(P_rx_interferer_dBm/10)
-    # SINR = S/I (bez uwzględnienia szumu)
-    SINR = S_mW / I_mW if I_mW > 0 else 1e9
-    # Przepływność R = B · log2(1 + SINR)
-    R = bandwidth * math.log2(1 + SINR)  # [bit/s]
-    return R
+def user_throughput(d, CRE, n_micro, n_macro):
+    """Przepływność pojedynczego użytkownika (bit/s)"""
+    Pm, Ps = rx_powers(d)
+    # przydział pasma
+    Bm_user, Bs_user = bandwidth_per_user(n_micro, n_macro)
+    # szumy
+    N_m = dbm_to_mw(noise_dbm(Bm_user))
+    N_s = dbm_to_mw(noise_dbm(Bs_user))
+    # interferencja = moc od drugiej stacji (lin)
+    I_m = dbm_to_mw(Ps)
+    I_s = dbm_to_mw(Pm)
+    # sygnał lin
+    S_m = dbm_to_mw(Pm)
+    S_s = dbm_to_mw(Ps + CRE)  # CRE dodajemy przy mikro
+    # SINR liniowe
+    sinr_m_lin = S_m / (I_m + N_m)
+    sinr_s_lin = S_s / (I_s + N_s)
+    # przepływność Shannona
+    Rm = Bm_user * np.log2(1 + sinr_m_lin)
+    Rs = Bs_user * np.log2(1 + sinr_s_lin)
+    # wybieramy obsługującą stację
+    return (Rm if Pm>=Ps else 0), (Rs if (Ps+CRE)>Pm else 0)
 
-# Lista wartości CRE, dla których przeprowadzamy symulację (w dB)
+# symulacja dla CRE = 0,3,6,12 dB
 CRE_values = [0, 3, 6, 12]
+avg_rates = []
 
-# Aby zebrać średnią przepływność dla każdej wartości CRE
-avg_throughputs = []
-
-# Pętla po wartościach CRE
 for CRE in CRE_values:
-    # Listy przechowujące wyniki dla tej wartości CRE
-    throughputs = np.zeros(n_users)
-    # Najpierw wyznacz przypisanie użytkowników – aby wyliczyć zasoby (liczba użytkowników przyłączonych do każdej stacji)
-    assignment = []  # "micro" lub "macro"
-    for x in user_positions:
-        # Moc odebrana od stacji mikro i makro
-        P_rx_micro, d_micro = calc_received_power(x, bs_position=0, bs_height=h_micro, 
-                                                    P_tx=P_tx_micro, G_tx=G_tx_micro)
-        P_rx_macro, d_macro = calc_received_power(x, bs_position=D, bs_height=H_macro, 
-                                                    P_tx=P_tx_macro, G_tx=G_tx_macro)
-        # Doliczamy CRE do mocy mikro
-        if (P_rx_micro + CRE) >= P_rx_macro:
-            assignment.append("micro")
+    # najpierw ustalamy przypisanie i liczymy, ilu jest przyłączonych do mikro/makro
+    assign = []
+    for d in user_pos:
+        Pm, Ps = rx_powers(d)
+        if Ps + CRE >= Pm:
+            assign.append("micro")
         else:
-            assignment.append("macro")
+            assign.append("macro")
+    n_micro = assign.count("micro")
+    n_macro = assign.count("macro")
     
-    # Policz, ile użytkowników jest przyłączonych do każdej stacji
-    n_micro = assignment.count("micro")
-    n_macro = assignment.count("macro")
-    # Unikamy dzielenia przez zero
-    bw_micro_user = B_user_micro / n_micro if n_micro > 0 else 0
-    bw_macro_user = B_user_macro / n_macro if n_macro > 0 else 0
+    # sumujemy przepustowości
+    rates = []
+    for i, d in enumerate(user_pos):
+        Rm, Rs = user_throughput(d, CRE, n_micro, n_macro)
+        rates.append(Rm+Rs)
+    avg_rates.append(np.mean(rates))
 
-    # Dla każdego użytkownika liczymy przepływność
-    for i, x in enumerate(user_positions):
-        P_rx_micro, d_micro = calc_received_power(x, bs_position=0, bs_height=h_micro, 
-                                                    P_tx=P_tx_micro, G_tx=G_tx_micro)
-        P_rx_macro, d_macro = calc_received_power(x, bs_position=D, bs_height=H_macro, 
-                                                    P_tx=P_tx_macro, G_tx=G_tx_macro)
-        if assignment[i] == "micro":
-            serving_power = P_rx_micro
-            interfering_power = P_rx_macro
-            allocated_bw = bw_micro_user
-        else:
-            serving_power = P_rx_macro
-            interfering_power = P_rx_micro
-            allocated_bw = bw_macro_user
-
-        # Obliczamy przepływność – wynik w Mbps
-        R = calc_throughput(serving_power, interfering_power, allocated_bw) / 1e6
-        throughputs[i] = R
-
-    avg_throughput = np.mean(throughputs)
-    avg_throughputs.append(avg_throughput)
-    print(f"CRE = {CRE} dB: liczba przyłączonych: mikro = {n_micro}, makro = {n_macro}, średnia przepływność = {avg_throughput:.3f} Mbps")
-
-# Wykres słupkowy
-plt.figure(figsize=(8, 5))
-plt.bar([str(c) for c in CRE_values], avg_throughputs, color='skyblue')
+# rysujemy
+plt.figure(figsize=(7,5))
+plt.bar([str(c) for c in CRE_values], np.array(avg_rates)/1e6, edgecolor='k')
 plt.xlabel("CRE [dB]")
 plt.ylabel("Średnia przepływność [Mbps]")
-plt.title("Średnia przepływność użytkowników dla różnych wartości CRE")
-plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.title("Symulacja: heterogeniczna sieć makro+mikro")
+plt.grid(axis='y', lw=0.5, ls='--')
 plt.show()
