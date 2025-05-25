@@ -1,6 +1,5 @@
 ﻿import numpy as np
 import matplotlib.pyplot as plt
-import math
 
 # — parametry stacji i anten
 G_tx_macro = 18    # dBi

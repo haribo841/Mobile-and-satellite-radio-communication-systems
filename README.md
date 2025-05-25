@@ -1,1 +1,1 @@
-# Cell Range Extension
+Learning the theoretical foundations and standards describing the principles of operation of modern mobile radio communication systems, especially 3G and 4G cellular and wireless broadband access to fixed networks, as well as selected issues of digital satellite systems
