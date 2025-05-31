@@ -7,6 +7,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Cell Range Extension", "Cel
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Base Station Dealtivation", "..\Base Station Dealtivation\Base Station Dealtivation.pyproj", "{7A4FF9A9-C24D-46DB-9BF3-AEBDF4B60DEE}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Massive MIMO", "..\Massive MIMO\Massive MIMO.pyproj", "{C778007A-5574-44E3-861A-6EECFD24F5B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,8 @@ Global
 		{41E1AC12-EAFE-4300-9BD4-6E8DF1345721}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A4FF9A9-C24D-46DB-9BF3-AEBDF4B60DEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7A4FF9A9-C24D-46DB-9BF3-AEBDF4B60DEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C778007A-5574-44E3-861A-6EECFD24F5B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C778007A-5574-44E3-861A-6EECFD24F5B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
