@@ -44,9 +44,9 @@
               "Title": "Massive_MIMO.py",
               "DocumentMoniker": "C:\\Users\\Adam\\source\\repos\\Massive MIMO\\Massive_MIMO.py",
               "RelativeDocumentMoniker": "..\\Massive MIMO\\Massive_MIMO.py",
-              "ToolTip": "C:\\Users\\Adam\\source\\repos\\Massive MIMO\\Massive_MIMO.py",
-              "RelativeToolTip": "..\\Massive MIMO\\Massive_MIMO.py",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAnAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Adam\\source\\repos\\Massive MIMO\\Massive_MIMO.py*",
+              "RelativeToolTip": "..\\Massive MIMO\\Massive_MIMO.py*",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAUwJIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
               "WhenOpened": "2025-05-31T20:31:54.104Z",
               "EditorCaption": ""
@@ -61,8 +61,7 @@
               "RelativeToolTip": "README.md",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAB+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001818|",
-              "WhenOpened": "2025-05-24T21:56:50.121Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-24T21:56:50.121Z"
             },
             {
               "$type": "Document",
@@ -74,8 +73,7 @@
               "RelativeToolTip": "..\\Base Station Dealtivation\\Base_Station_Dealtivation.py",
               "ViewState": "AgIAADYAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
-              "WhenOpened": "2025-05-24T21:28:25.411Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-05-24T21:28:25.411Z"
             },
             {
               "$type": "Document",
@@ -83,12 +81,11 @@
               "Title": ".gitignore",
               "DocumentMoniker": "C:\\Users\\Adam\\source\\repos\\Cell Range Extension\\.gitignore",
               "RelativeDocumentMoniker": ".gitignore",
-              "ToolTip": "C:\\Users\\Adam\\source\\repos\\Cell Range Extension\\.gitignore*",
-              "RelativeToolTip": ".gitignore*",
+              "ToolTip": "C:\\Users\\Adam\\source\\repos\\Cell Range Extension\\.gitignore",
+              "RelativeToolTip": ".gitignore",
               "ViewState": "AgIAAHIAAAAAAAAAAADwv5UAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2025-04-16T08:34:10.789Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-16T08:34:10.789Z"
             },
             {
               "$type": "Document",
@@ -100,8 +97,7 @@
               "RelativeToolTip": "Cell_Range_Extension.py",
               "ViewState": "AgIAAFEAAAAAAAAAAAAAAAEAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002457|",
-              "WhenOpened": "2025-04-15T13:42:08.426Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-15T13:42:08.426Z"
             }
           ]
         }
