@@ -1,0 +1,46 @@
+{
+  "purpose": "Reproduction of the existing coursework output, not physical-model validation.",
+  "environment": {
+    "platform": "Windows",
+    "python": "3.12.14",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2",
+    "backend": "Agg"
+  },
+  "source_sha256": {
+    "base_station": "a8de2ae906d7ea0032112e8d1cad0f0cf07e98313d6d47cdd93af75f1e2eaa10",
+    "cell_range": "17d2dccede83e52a34e6ca69ba987759dab6af36bfa0199055423776b132cde3",
+    "mvdr": "089b33aa4d0336abc8449ab4b1f22beb8413a301a6d82a56bbf9a8c599727f06"
+  },
+  "cell_range_expansion": {
+    "random_seed": 42,
+    "users": 20,
+    "cre_db": [
+      0,
+      3,
+      6,
+      12
+    ],
+    "average_rate_mbps": [
+      0.35724326415726715,
+      0.4086333569112068,
+      0.4645869241619739,
+      0.4515827486787649
+    ]
+  },
+  "mvdr": {
+    "elements": 8,
+    "spacing_wavelengths": 0.5,
+    "desired_angle_degrees": 0.0,
+    "interferer_angles_degrees": [
+      -30.0,
+      -15.0,
+      15.0,
+      30.0
+    ],
+    "snr_db": 10.0,
+    "inr_db": 10.0,
+    "angular_samples": 361,
+    "normalized_peak_db": 0.0
+  }
+}

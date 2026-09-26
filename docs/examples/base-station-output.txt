@@ -1,0 +1,13 @@
+SNR1 [dB]: ['4.38', '4.03', '2.68']
+SNR2 [dB]: ['6.29', '7.56', '7.02']
+Wymagane przepływności [Mbit/s]: ['4.14', '2.21', '2.91']
+
+Scenariusz (a) – 2 stacje aktywne:
+  Zajętość pasma: st1 = 25.0%, st2 = 36.5%
+  Moc: st1 = 461.1 W, st2 = 461.5 W, łącznie = 922.6 W
+  Efektywność energetyczna = 0.0209 Mbit/J
+
+Scenariusz (b) – 1 stacja aktywna:
+  Zajętość pasma (st1) = 78.1% (st2 uśpiona)
+  Moc: st1 = 463.3 W, st2 = 100.0 W, łącznie = 563.3 W
+  Efektywność energetyczna = 0.0342 Mbit/J

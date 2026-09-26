@@ -1,8 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.so           # C extensions
-*.pyd          # Windows DLL equivalent
-*.pyo          # Optimized bytecode
+# C extensions
+*.so
+# Windows DLL equivalent
+*.pyd
+# Optimized bytecode
+*.pyo
 
 # Virtual environments
 .env
@@ -10,9 +13,12 @@ __pycache__/
 env/
 venv/
 ENV/
-.direnv/            # direnv environment files
-pip-wheel-metadata/ # pip metadata files
-__pypackages__/     # PEP 582 (pyflow, pdm)
+# direnv environment files
+.direnv/
+# pip metadata files
+pip-wheel-metadata/
+# PEP 582 (pyflow, pdm)
+__pypackages__/
 
 # Package managers lock files
 # It is generally recommended to include lock files in version control for reproducibility
@@ -20,10 +26,13 @@ Pipfile.lock
 uv.lock
 poetry.lock
 pdm.lock
-.pdm-python     # PDM internal environment
-.pdm.toml       # PDM project configuration (usually local)
+# PDM internal environment
+.pdm-python
+# PDM project configuration (usually local)
+.pdm.toml
 
 # Distribution / packaging
+out/
 .Python
 build/
 develop-eggs/
@@ -71,9 +80,11 @@ dmypy.json
 .ruff_cache/
 
 # JetBrains (PyCharm, IntelliJ, Rider)
-.idea/      # PyCharm project files (uncomment if you want to ignore all)
-*.iml       # Module files
-*.iws       # Workspace files
+.idea/
+# Module files
+*.iml
+# Workspace files
+*.iws
 
 # VS Code
 .vscode/*
@@ -82,8 +93,10 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-.history/   # VS Code Local History
-.vs/        # Visual Studio cache directory (also used by VS Code)
+# VS Code Local History
+.history/
+# Visual Studio cache directory
+.vs/
 
 # Spyder
 .spyderproject
