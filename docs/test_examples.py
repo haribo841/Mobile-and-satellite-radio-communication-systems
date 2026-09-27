@@ -27,6 +27,7 @@ class ExampleCaptureTests(unittest.TestCase):
         result = self.report["cell_range_expansion"]
         self.assertEqual(result["cre_db"], [0, 3, 6, 12])
         self.assertEqual(result["users"], 20)
+        self.assertEqual(result["random_bit_generator"], "PCG64")
         self.assertEqual(len(result["average_rate_mbps"]), 4)
         self.assertTrue(all(rate > 0 for rate in result["average_rate_mbps"]))
 

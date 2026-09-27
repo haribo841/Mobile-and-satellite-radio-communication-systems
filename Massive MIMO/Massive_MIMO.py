@@ -18,36 +18,35 @@ def steering_vector(angle_deg, num_elements, element_spacing_ratio):
     sv = np.exp(1j * 2 * np.pi * element_spacing_ratio * m_indices * np.sin(angle_rad))
     return sv[:, np.newaxis]  # zwracamy wektor kolumnowy (L x 1)
 
-def plot_mvdr_beampattern(L, d_ratio, soi_angle_deg, snoi_angles_deg, snr_db, inr_db):
+def plot_mvdr_beampattern(num_elements, d_ratio, soi_angle_deg, snoi_angles_deg, snr_db, inr_db):
     """
     Oblicza i rysuje charakterystykę promieniowania (beampattern) dla beamformera MVDR.
     Wyświetla pół-koło od -90° do +90° z 0° u góry.
     """
     # 1) Konwersja mocy z dB do liniowego (zakładamy noise_power = 1)
     noise_power = 1.0
-    soi_power = noise_power * (10 ** (snr_db / 10.0))
     snoi_power = noise_power * (10 ** (inr_db / 10.0))
 
     # 2) Wektor sterujący dla sygnału pożądanego (SOI)
-    a_soi = steering_vector(soi_angle_deg, L, d_ratio)
+    a_soi = steering_vector(soi_angle_deg, num_elements, d_ratio)
 
     # 3) Budowa macierzy kowariancji zakłóceń + szumu R_in
-    R_in = np.zeros((L, L), dtype=complex)
+    interference_covariance = np.zeros((num_elements, num_elements), dtype=complex)
     for angle_deg in snoi_angles_deg:
-        a_int = steering_vector(angle_deg, L, d_ratio)
-        R_in += snoi_power * (a_int @ a_int.conj().T)
-    R_in += noise_power * np.eye(L)
+        a_int = steering_vector(angle_deg, num_elements, d_ratio)
+        interference_covariance += snoi_power * (a_int @ a_int.conj().T)
+    interference_covariance += noise_power * np.eye(num_elements)
 
     # 4) Obliczenie wag MVDR wg wzoru: (R_in^{-1} a_soi) / (a_soi^H R_in^{-1} a_soi)
     try:
-        R_in_inv = np.linalg.inv(R_in)
+        covariance_inverse = np.linalg.inv(interference_covariance)
     except np.linalg.LinAlgError:
         # Jeśli R_in jest osobliwa, dodajemy niewielką wartość na przekątnej (regularizacja)
-        R_in += np.eye(L) * 1e-6
-        R_in_inv = np.linalg.inv(R_in)
+        interference_covariance += np.eye(num_elements) * 1e-6
+        covariance_inverse = np.linalg.inv(interference_covariance)
 
-    numerator = R_in_inv @ a_soi
-    denominator = (a_soi.conj().T @ R_in_inv @ a_soi).item()
+    numerator = covariance_inverse @ a_soi
+    denominator = (a_soi.conj().T @ covariance_inverse @ a_soi).item()
     weights = numerator / denominator  # wektor wag MVDR (L x 1)
 
     # 5) Skanowanie kątowe od -90° do +90° (np. co 0.5° → 361 próbek)
@@ -55,7 +54,7 @@ def plot_mvdr_beampattern(L, d_ratio, soi_angle_deg, snoi_angles_deg, snr_db, in
     beampattern_db = np.zeros(len(phi_scan_deg))
 
     for i, angle_deg in enumerate(phi_scan_deg):
-        a_scan = steering_vector(angle_deg, L, d_ratio)        # (L x 1)
+        a_scan = steering_vector(angle_deg, num_elements, d_ratio)  # (L x 1)
         response = (weights.conj().T @ a_scan).item()           # zespolony skalar
         power = np.abs(response) ** 2
         beampattern_db[i] = 10 * np.log10(power + 1e-12)        # +1e-12, żeby uniknąć log(0)
@@ -87,7 +86,7 @@ def plot_mvdr_beampattern(L, d_ratio, soi_angle_deg, snoi_angles_deg, snr_db, in
     ax.set_xticklabels([f"{d}°" for d in deg_ticks])
 
     title_str = (
-        f"MVDR Beampattern (L={L}, d={d_ratio}λ, SOI={soi_angle_deg}°)\n"
+        f"MVDR Beampattern (L={num_elements}, d={d_ratio}λ, SOI={soi_angle_deg}°)\n"
         f"SNOI @ {snoi_angles_deg}°, SNR={snr_db}dB, INR={inr_db}dB"
     )
     ax.set_title(title_str, va='bottom', fontsize=12)

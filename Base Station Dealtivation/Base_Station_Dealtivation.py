@@ -9,51 +9,50 @@ def compute_bandwidth_for_rate(rate, snr_db):
     # zakładamy, że log2 daje wynik w bitach na sekundę na Hz.
     return rate / math.log2(1 + snr_lin)
 
-def scenario_two_stations(snr1_db, snr2_db, rates):
+def scenario_two_stations(snr2_db, rates):
     """Scenariusz (a): Druga stacja aktywna. Wszyscy użytkownicy są obsługiwani przez stację 2,
        stacja 1 pozostaje z początkowym obciążeniem (2.5 MHz, 10 Mbit/s)."""
-    B = 10.0  # MHz
-    P1 = 460.0  # moc podstawowa [W]
-    Delta = 4.2
-    Psleep = 100.0
+    bandwidth_mhz = 10.0
+    base_power_w = 460.0
+    load_power_w = 4.2
     # Oblicz pasmo potrzebne dla każdego użytkownika w stacji 2
     b2 = [compute_bandwidth_for_rate(r, snr2) for r, snr2 in zip(rates, snr2_db)]
     total_b2 = sum(b2)
     # Zajętość (względna):
-    rho1 = 2.5 / B      # początkowa stacja 1 (0.25)
-    rho2 = total_b2 / B
+    rho1 = 2.5 / bandwidth_mhz      # początkowa stacja 1 (0.25)
+    rho2 = total_b2 / bandwidth_mhz
     # Oblicz moc obu stacji:
-    P_sta1 = P1 + Delta * rho1
-    P_sta2 = P1 + Delta * rho2
-    total_power = P_sta1 + P_sta2
+    station1_power = base_power_w + load_power_w * rho1
+    station2_power = base_power_w + load_power_w * rho2
+    total_power = station1_power + station2_power
     total_rate = 10.0 + sum(rates)  # 10 Mbit/s (stacja 1 początkowo) + wymagania użytkowników
-    EE = total_rate / total_power
+    energy_efficiency = total_rate / total_power
     return {
         'rho1': rho1, 'rho2': rho2,
-        'Power1': P_sta1, 'Power2': P_sta2,
-        'TotalPower': total_power, 'TotalRate': total_rate, 'EE': EE
+        'Power1': station1_power, 'Power2': station2_power,
+        'TotalPower': total_power, 'TotalRate': total_rate, 'EE': energy_efficiency
     }
 
-def scenario_one_station(snr1_db, snr2_db, rates):
+def scenario_one_station(snr1_db, rates):
     """Scenariusz (b): Druga stacja wyłączona, wszyscy użytkownicy przeniesieni do stacji 1."""
-    B = 10.0
-    P1 = 460.0
-    Delta = 4.2
-    Psleep = 100.0
+    bandwidth_mhz = 10.0
+    base_power_w = 460.0
+    load_power_w = 4.2
+    sleep_power_w = 100.0
     # Wszyscy użytkownicy na stacji 1:
     b1 = [compute_bandwidth_for_rate(r, snr1) for r, snr1 in zip(rates, snr1_db)]
     total_b1 = 2.5 + sum(b1)  # sumujemy z początkowymi 2.5 MHz
-    rho1 = total_b1 / B
+    rho1 = total_b1 / bandwidth_mhz
     # Moc stacji 1 plus stacja 2 w trybie uśpienia:
-    P_sta1 = P1 + Delta * rho1
-    P_sta2 = Psleep
-    total_power = P_sta1 + P_sta2
+    station1_power = base_power_w + load_power_w * rho1
+    station2_power = sleep_power_w
+    total_power = station1_power + station2_power
     total_rate = 10.0 + sum(rates)  # łączna przepływność
-    EE = total_rate / total_power
+    energy_efficiency = total_rate / total_power
     return {
         'rho1': rho1,
-        'Power1': P_sta1, 'Power2': P_sta2,
-        'TotalPower': total_power, 'TotalRate': total_rate, 'EE': EE
+        'Power1': station1_power, 'Power2': station2_power,
+        'TotalPower': total_power, 'TotalRate': total_rate, 'EE': energy_efficiency
     }
 
 def main():
@@ -67,8 +66,8 @@ def main():
     print("SNR2 [dB]:", [f"{x:.2f}" for x in snr2_db])
     print("Wymagane przepływności [Mbit/s]:", [f"{r:.2f}" for r in rates])
 
-    res_a = scenario_two_stations(snr1_db, snr2_db, rates)
-    res_b = scenario_one_station(snr1_db, snr2_db, rates)
+    res_a = scenario_two_stations(snr2_db, rates)
+    res_b = scenario_one_station(snr1_db, rates)
     print("\nScenariusz (a) – 2 stacje aktywne:")
     print(f"  Zajętość pasma: st1 = {res_a['rho1']*100:.1f}%, st2 = {res_a['rho2']*100:.1f}%")
     print(f"  Moc: st1 = {res_a['Power1']:.1f} W, st2 = {res_a['Power2']:.1f} W, łącznie = {res_a['TotalPower']:.1f} W")

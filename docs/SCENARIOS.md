@@ -19,16 +19,16 @@ The calculation uses free-space path loss and simplified bandwidth allocation. I
 
 ![Bar chart produced by the existing cell-range-expansion script](images/cell-range-expansion.png)
 
-The checked-in chart uses 20 users, NumPy seed 42, a 1,000 m macro/micro separation, a 3.5 GHz carrier, and a 5 MHz bandwidth parameter. The original bandwidth allocation uses fractions of that bandwidth, not 5 MHz per user.
+The checked-in chart uses 20 users, NumPy `default_rng(42)` with PCG64, a 1,000 m macro/micro separation, a 3.5 GHz carrier, and a 5 MHz bandwidth parameter. The original bandwidth allocation uses fractions of that bandwidth, not 5 MHz per user.
 
 | CRE bias | Existing script's mean rate |
 | --- | --- |
-| 0 dB | 0.357243 Mbit/s |
-| 3 dB | 0.408633 Mbit/s |
-| 6 dB | 0.464587 Mbit/s |
-| 12 dB | 0.451583 Mbit/s |
+| 0 dB | 0.297746 Mbit/s |
+| 3 dB | 0.326594 Mbit/s |
+| 6 dB | 0.361504 Mbit/s |
+| 12 dB | 0.440774 Mbit/s |
 
-Important source-level limitations: CRE is added both to association and to the micro-cell signal power used in the rate calculation. The macro rate is enabled by `Pm >= Ps`, while micro association uses the biased power. A user can therefore contribute both macro and micro rates for a positive bias. This chart faithfully reproduces that implementation; it is not evidence of a physically correct CRE optimization. The documentation update does not alter the algorithm.
+Important source-level limitations: CRE is added both to association and to the micro-cell signal power used in the rate calculation. The macro rate is enabled by `macro_power_dbm >= micro_power_dbm`, while micro association uses the biased power. A user can therefore contribute both macro and micro rates for a positive bias. This chart faithfully reproduces that implementation; it is not evidence of a physically correct CRE optimization. The Sonar cleanup preserves these equations and association conditions.
 
 ## Massive MIMO MVDR beamforming
 
@@ -43,7 +43,7 @@ Important source-level limitations: CRE is added both to association and to the 
 | SNR / INR | 10 dB / 10 dB |
 | Angular scan | -90 to +90 degrees, 361 samples |
 
-The [saved plot](images/mvdr-defaults.png) is normalized to its maximum of 0 dB and displayed over a -60 to 0 dB radial range. It is not an absolute radiation-power measurement. The current source computes `soi_power` from SNR but does not use it when forming the covariance matrix or weights; changing SNR alone will not change this normalized pattern. INR does enter the interference covariance matrix.
+The [saved plot](images/mvdr-defaults.png) is normalized to its maximum of 0 dB and displayed over a -60 to 0 dB radial range. It is not an absolute radiation-power measurement. SNR is retained as a scenario label in the plot title but does not enter the covariance matrix or weights; changing SNR alone will not change this normalized pattern. The unused `soi_power` calculation was removed. INR does enter the interference covariance matrix.
 
 ## Reproducibility
 
@@ -53,11 +53,15 @@ Run from the repository root:
 
 ```powershell
 python docs/render_examples.py
-python -m unittest discover -s docs -p test_examples.py -v
+python -m unittest discover -s docs -p "test_*.py" -v
 ```
 
 These commands assume the listed dependencies are installed in the selected interpreter. To preserve the checked-in captures when experimenting, pass a separate output directory, for example `python docs/render_examples.py --output-dir .\out\radio-preview`. The directory receives `images/` and `examples/` subdirectories.
 
 The renderer executes the existing scripts, temporarily disables `plt.show()`, and supplies empty responses to the MVDR prompts to select defaults. It checks for finite numeric outputs and hashes each simulation source before and after capture. It does not rewrite the simulations or change the user's installed Python environment.
 
-Verified on Windows on 2026-09-25 using Python 3.12.14, NumPy 2.5.3, and Matplotlib 3.11.2 with Agg. Tests cover PNG generation, expected result structure, the default MVDR settings and normalization, and the console-output sections. They do not validate all parameter combinations or the physical correctness of the coursework models.
+On 2026-09-27, the legacy global NumPy generator was replaced with the recommended [Generator API](https://numpy.org/doc/stable/reference/random/generator.html). The seed remains 42, but PCG64 produces different user positions than the previous generator. The CRE chart and numeric table were regenerated together. The generator is local to the simulation and no longer resets NumPy's global random state. Keep the recorded dependency versions when reproducing this sample.
+
+The two base-station functions now take only the SNR values of the serving station and the requested rates: `scenario_two_stations(snr2_db, rates)` and `scenario_one_station(snr1_db, rates)`. Their console results are unchanged. The MVDR array-size parameter is now `num_elements`; its positional calling order and default beam pattern are unchanged.
+
+Verified on Windows on 2026-09-27 using Python 3.12.14, NumPy 2.5.3, and Matplotlib 3.11.2 with Agg. All 15 tests pass: three artifact checks plus twelve regression checks for base-station values, repeatable isolated sampling, bandwidth allocation, steering vectors, the pre-cleanup MVDR pattern, SNR-label behavior, matrix regularization, and CLI fallback. They do not validate all parameter combinations or the physical correctness of the coursework models.

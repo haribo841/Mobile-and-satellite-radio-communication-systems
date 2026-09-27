@@ -8,12 +8,13 @@
     "backend": "Agg"
   },
   "source_sha256": {
-    "base_station": "a8de2ae906d7ea0032112e8d1cad0f0cf07e98313d6d47cdd93af75f1e2eaa10",
-    "cell_range": "17d2dccede83e52a34e6ca69ba987759dab6af36bfa0199055423776b132cde3",
-    "mvdr": "089b33aa4d0336abc8449ab4b1f22beb8413a301a6d82a56bbf9a8c599727f06"
+    "base_station": "4c6b822b88649c1d4032e343f18a098c787f6d16995396c6859961034d2265d9",
+    "cell_range": "2c88445ea7d51159e4a02cb61277563aebd460f5a48215368409f7ea01e44406",
+    "mvdr": "d895101ed4adcce49b5087e47f980e3d4cd7f6e4ced3ecc3e8bd92e632564db7"
   },
   "cell_range_expansion": {
     "random_seed": 42,
+    "random_bit_generator": "PCG64",
     "users": 20,
     "cre_db": [
       0,
@@ -22,10 +23,10 @@
       12
     ],
     "average_rate_mbps": [
-      0.35724326415726715,
-      0.4086333569112068,
-      0.4645869241619739,
-      0.4515827486787649
+      0.29774585392235114,
+      0.32659369928864823,
+      0.361504140176165,
+      0.4407741808200944
     ]
   },
   "mvdr": {

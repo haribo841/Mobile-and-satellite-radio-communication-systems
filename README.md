@@ -45,10 +45,12 @@ The two plotting examples require NumPy and Matplotlib. The following Windows co
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r docs/requirements-examples.txt
 .\.venv\Scripts\python.exe docs/render_examples.py
-.\.venv\Scripts\python.exe -m unittest discover -s docs -p test_examples.py -v
+.\.venv\Scripts\python.exe -m unittest discover -s docs -p "test_*.py" -v
 ```
 
-The renderer uses the scripts' existing seeds and default inputs, saves two PNGs, and records versions, inputs, results, and source hashes in [results.json](docs/examples/results.json). It does not change their formulas. Three regression checks verify the generated artifacts and basic output structure, not the scientific validity of the models.
+The renderer uses the scripts' seeds and default inputs, saves two PNGs, and records versions, the random generator, inputs, results, and source hashes in [results.json](docs/examples/results.json). It does not change their formulas. Fifteen regression checks cover the generated artifacts, numerical examples, repeatable sampling, and CLI behavior, not the scientific validity of the models.
+
+The CRE example now uses NumPy's `default_rng(42)` with PCG64. Its sample and saved chart differ from the earlier legacy-generator example, although the seed remains 42. See the [reproducibility notes](docs/SCENARIOS.md#reproducibility).
 
 ## Supported platform
 

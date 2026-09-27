@@ -1,7 +1,7 @@
 ﻿import numpy as np
 import matplotlib.pyplot as plt
 
-# — parametry stacji i anten
+# Parametry stacji i anten
 G_tx_macro = 18    # dBi
 P_tx_macro = 46    # dBm
 H_macro    = 40    # m
@@ -13,11 +13,11 @@ h_micro    = 5     # m
 G_ue = 2           # dBi
 u    = 2           # m
 
-# — parametry kanału
+# Parametry kanału
 D       = 1000          # m, odległość mikro(0)–makro(D)
 n_users = 20
 
-# — częstotliwość i pasmo
+# Częstotliwość i pasmo
 f  = 3.5e9      # Hz, 3.5 GHz
 B  = 5e6        # Hz, 5 MHz
 Nt = -174       # dBm/Hz (gęstość mocy szumu termicznego)
@@ -30,9 +30,9 @@ def bandwidth_per_user(n_micro, n_macro):
     """Pasmo przydzielane równomiernie:
        - mikro dzieli B/4 między n_micro użytk.
        - makro dzieli B/10 między n_macro użytk."""
-    B_s = (B/4) / n_micro if n_micro>0 else 0
-    B_m = (B/10)/ n_macro if n_macro>0 else 0
-    return B_m, B_s
+    micro_bandwidth = (B/4) / n_micro if n_micro>0 else 0
+    macro_bandwidth = (B/10)/ n_macro if n_macro>0 else 0
+    return macro_bandwidth, micro_bandwidth
 
 def dbm_to_mw(p_dbm):
     return 10**(p_dbm/10)
@@ -42,8 +42,8 @@ def noise_dbm(bw_hz):
     return Nt + 10*np.log10(bw_hz)
 
 # pozycje użytkowników
-np.random.seed(42)
-user_pos = np.random.uniform(0, D, size=n_users)
+rng = np.random.default_rng(42)
+user_pos = rng.uniform(0, D, size=n_users)
 
 def rx_powers(d):
     """Zwraca Pm, Ps [dBm] – moce odebrane od makro i mikro"""
@@ -51,43 +51,46 @@ def rx_powers(d):
     dm = np.hypot(D-d, H_macro-u)
     ds = np.hypot(d,   h_micro-u)
     # moce odebrane
-    Pm = P_tx_macro + G_tx_macro + G_ue - fspl(dm)
-    Ps = P_tx_micro + G_tx_micro + G_ue - fspl(ds)
-    return Pm, Ps
+    macro_power_dbm = P_tx_macro + G_tx_macro + G_ue - fspl(dm)
+    micro_power_dbm = P_tx_micro + G_tx_micro + G_ue - fspl(ds)
+    return macro_power_dbm, micro_power_dbm
 
-def user_throughput(d, CRE, n_micro, n_macro):
+def user_throughput(d, cre_db, n_micro, n_macro):
     """Przepływność pojedynczego użytkownika (bit/s)"""
-    Pm, Ps = rx_powers(d)
+    macro_power_dbm, micro_power_dbm = rx_powers(d)
     # przydział pasma
-    Bm_user, Bs_user = bandwidth_per_user(n_micro, n_macro)
+    macro_bandwidth, micro_bandwidth = bandwidth_per_user(n_micro, n_macro)
     # szumy
-    N_m = dbm_to_mw(noise_dbm(Bm_user))
-    N_s = dbm_to_mw(noise_dbm(Bs_user))
+    macro_noise = dbm_to_mw(noise_dbm(macro_bandwidth))
+    micro_noise = dbm_to_mw(noise_dbm(micro_bandwidth))
     # interferencja = moc od drugiej stacji (lin)
-    I_m = dbm_to_mw(Ps)
-    I_s = dbm_to_mw(Pm)
+    macro_interference = dbm_to_mw(micro_power_dbm)
+    micro_interference = dbm_to_mw(macro_power_dbm)
     # sygnał lin
-    S_m = dbm_to_mw(Pm)
-    S_s = dbm_to_mw(Ps + CRE)  # CRE dodajemy przy mikro
+    macro_signal = dbm_to_mw(macro_power_dbm)
+    micro_signal = dbm_to_mw(micro_power_dbm + cre_db)  # CRE dodajemy przy mikro
     # SINR liniowe
-    sinr_m_lin = S_m / (I_m + N_m)
-    sinr_s_lin = S_s / (I_s + N_s)
+    sinr_m_lin = macro_signal / (macro_interference + macro_noise)
+    sinr_s_lin = micro_signal / (micro_interference + micro_noise)
     # przepływność Shannona
-    Rm = Bm_user * np.log2(1 + sinr_m_lin)
-    Rs = Bs_user * np.log2(1 + sinr_s_lin)
+    macro_rate = macro_bandwidth * np.log2(1 + sinr_m_lin)
+    micro_rate = micro_bandwidth * np.log2(1 + sinr_s_lin)
     # wybieramy obsługującą stację
-    return (Rm if Pm>=Ps else 0), (Rs if (Ps+CRE)>Pm else 0)
+    return (
+        macro_rate if macro_power_dbm >= micro_power_dbm else 0,
+        micro_rate if micro_power_dbm + cre_db > macro_power_dbm else 0,
+    )
 
 # symulacja dla CRE = 0,3,6,12 dB
 CRE_values = [0, 3, 6, 12]
 avg_rates = []
 
-for CRE in CRE_values:
+for cre_db in CRE_values:
     # najpierw ustalamy przypisanie i liczymy, ilu jest przyłączonych do mikro/makro
     assign = []
     for d in user_pos:
-        Pm, Ps = rx_powers(d)
-        if Ps + CRE >= Pm:
+        macro_power_dbm, micro_power_dbm = rx_powers(d)
+        if micro_power_dbm + cre_db >= macro_power_dbm:
             assign.append("micro")
         else:
             assign.append("macro")
@@ -96,9 +99,9 @@ for CRE in CRE_values:
     
     # sumujemy przepustowości
     rates = []
-    for i, d in enumerate(user_pos):
-        Rm, Rs = user_throughput(d, CRE, n_micro, n_macro)
-        rates.append(Rm+Rs)
+    for d in user_pos:
+        macro_rate, micro_rate = user_throughput(d, cre_db, n_micro, n_macro)
+        rates.append(macro_rate + micro_rate)
     avg_rates.append(np.mean(rates))
 
 # rysujemy

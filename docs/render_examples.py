@@ -75,6 +75,7 @@ def render_examples(output_root):
         "source_sha256": source_hashes,
         "cell_range_expansion": {
             "random_seed": 42,
+            "random_bit_generator": type(cell_range["rng"].bit_generator).__name__,
             "users": cell_range["n_users"],
             "cre_db": cell_range["CRE_values"],
             "average_rate_mbps": (rates / 1e6).tolist(),
